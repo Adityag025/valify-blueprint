@@ -38,5 +38,7 @@ export const ErrorCodes = Object.freeze({
   ERR_WEEKDAY:       'ERR_WEEKDAY',
   ERR_BOOLEAN_TRUE:  'ERR_BOOLEAN_TRUE',
   ERR_BOOLEAN_FALSE: 'ERR_BOOLEAN_FALSE',
+  ERR_UNION:         'ERR_UNION',
+  ERR_TUPLE_LENGTH:  'ERR_TUPLE_LENGTH',
   ERR_CUSTOM:        'ERR_CUSTOM',
 })

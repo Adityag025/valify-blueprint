@@ -5,6 +5,8 @@ export { boolean } from './validators/BooleanValidator.js'
 export { date }    from './validators/DateValidator.js'
 export { array }   from './validators/ArrayValidator.js'
 export { object }  from './validators/ObjectValidator.js'
+export { union }   from './validators/UnionValidator.js'
+export { tuple }   from './validators/TupleValidator.js'
 
 // ─── Validator classes (for instanceof checks / subclassing) ───────────────
 export { StringValidator }  from './validators/StringValidator.js'
@@ -13,6 +15,8 @@ export { BooleanValidator } from './validators/BooleanValidator.js'
 export { DateValidator }    from './validators/DateValidator.js'
 export { ArrayValidator }   from './validators/ArrayValidator.js'
 export { ObjectValidator }  from './validators/ObjectValidator.js'
+export { UnionValidator }   from './validators/UnionValidator.js'
+export { TupleValidator }   from './validators/TupleValidator.js'
 export { BaseValidator }    from './core/BaseValidator.js'
 
 // ─── Schema helpers ────────────────────────────────────────────────────────

@@ -180,6 +180,37 @@ export declare class ObjectValidator<S extends ObjectShape = ObjectShape> extend
 
 export declare function object<S extends ObjectShape>(shape?: S): ObjectValidator<S>
 
+// ─── Union validator ───────────────────────────────────────────────────────
+
+type UnionOutput<T extends readonly BaseValidator<unknown, unknown>[]> = T[number]['_output']
+
+export declare class UnionValidator<
+  T extends readonly BaseValidator<unknown, unknown>[]
+> extends BaseValidator<unknown, UnionOutput<T>> {
+  required(message?: string): this
+}
+
+export declare function union<T extends readonly BaseValidator<unknown, unknown>[]>(
+  validators: T
+): UnionValidator<T>
+
+// ─── Tuple validator ───────────────────────────────────────────────────────
+
+type TupleOutput<T extends readonly BaseValidator<unknown, unknown>[]> = {
+  [K in keyof T]: T[K] extends BaseValidator<unknown, infer O> ? O : never
+}
+
+export declare class TupleValidator<
+  T extends readonly BaseValidator<unknown, unknown>[]
+> extends BaseValidator<unknown[], TupleOutput<T>> {
+  required(message?: string): this
+  rest<R>(validator: BaseValidator<unknown, R>): this
+}
+
+export declare function tuple<T extends readonly BaseValidator<unknown, unknown>[]>(
+  items: T
+): TupleValidator<T>
+
 // ─── Error classes ─────────────────────────────────────────────────────────
 
 export declare class ValidationError extends Error {
@@ -227,6 +258,8 @@ export declare const ErrorCodes: {
   readonly ERR_PAST:          string
   readonly ERR_BOOLEAN_TRUE:  string
   readonly ERR_BOOLEAN_FALSE: string
+  readonly ERR_UNION:         string
+  readonly ERR_TUPLE_LENGTH:  string
   readonly ERR_CUSTOM:        string
   [key: string]: string
 }
