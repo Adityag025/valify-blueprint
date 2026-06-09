@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Valify — Interactive Playground</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0b0e17;
+      --surface:  #141824;
+      --card:     #1c2133;
+      --border:   #2a3148;
+      --border2:  #323a55;
+      --primary:  #6366f1;
+      --primary2: #818cf8;
+      --success:  #22c55e;
+      --error:    #f43f5e;
+      --warn:     #f59e0b;
+      --text:     #e2e8f0;
+      --muted:    #64748b;
+      --code-bg:  #0d111c;
+      --radius:   12px;
+      --radius-sm: 8px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* ── NAV ────────────────────────────────────── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(11, 14, 23, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 60px;
+    }
+    .nav-logo { display: flex; align-items: center; gap: .5rem; font-weight: 700; font-size: 1.1rem; }
+    .nav-logo .badge {
+      background: var(--primary); color: #fff;
+      font-size: .65rem; font-weight: 600; padding: 2px 7px;
+      border-radius: 99px; letter-spacing: .03em;
+    }
+    .nav-links { display: flex; gap: 1.5rem; }
+    .nav-links a {
+      color: var(--muted); text-decoration: none; font-size: .875rem;
+      transition: color .2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+
+    /* ── HERO ───────────────────────────────────── */
+    .hero {
+      text-align: center; padding: 4rem 2rem 3rem;
+      background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99,102,241,.15), transparent);
+    }
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.25rem); font-weight: 700; line-height: 1.15;
+      background: linear-gradient(135deg, #e2e8f0 30%, var(--primary2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero p { color: var(--muted); font-size: 1.125rem; margin-top: .75rem; max-width: 520px; margin-inline: auto; }
+    .hero-stats {
+      display: flex; justify-content: center; gap: 2.5rem; margin-top: 2rem;
+      flex-wrap: wrap;
+    }
+    .stat { text-align: center; }
+    .stat-num { font-size: 1.5rem; font-weight: 700; color: var(--primary2); }
+    .stat-label { font-size: .75rem; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+
+    /* ── TABS ───────────────────────────────────── */
+    .tabs-wrap {
+      position: sticky; top: 60px; z-index: 99;
+      background: var(--bg); border-bottom: 1px solid var(--border);
+    }
+    .tabs {
+      display: flex; overflow-x: auto; padding: 0 2rem;
+      scrollbar-width: none;
+      max-width: 1200px; margin: 0 auto;
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab-btn {
+      padding: .9rem 1.25rem; font-size: .875rem; font-weight: 500;
+      background: none; border: none; color: var(--muted); cursor: pointer;
+      border-bottom: 2px solid transparent; white-space: nowrap;
+      transition: color .2s, border-color .2s; flex-shrink: 0;
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--primary2); border-bottom-color: var(--primary2); }
+
+    /* ── LAYOUT ─────────────────────────────────── */
+    .main { max-width: 1200px; margin: 0 auto; padding: 2.5rem 2rem 4rem; }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .split {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;
+      align-items: start;
+    }
+    @media (max-width: 800px) { .split { grid-template-columns: 1fr; } }
+
+    /* ── CARDS ──────────────────────────────────── */
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.5rem;
+    }
+    .card-title {
+      font-size: .8rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .08em; color: var(--muted); margin-bottom: 1.25rem;
+    }
+
+    /* ── FORM ELEMENTS ──────────────────────────── */
+    .form-group { margin-bottom: 1.25rem; }
+    label {
+      display: block; font-size: .8rem; font-weight: 500;
+      color: var(--muted); margin-bottom: .4rem;
+    }
+    input, select, textarea {
+      width: 100%; background: var(--surface); border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm); padding: .65rem .9rem;
+      color: var(--text); font-family: inherit; font-size: .9rem;
+      outline: none; transition: border-color .2s, box-shadow .2s;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,.15);
+    }
+    input.valid   { border-color: var(--success); }
+    input.invalid { border-color: var(--error); }
+    .field-error {
+      color: var(--error); font-size: .78rem; margin-top: .3rem;
+      display: flex; align-items: center; gap: .3rem; min-height: 1.2em;
+    }
+    .field-success {
+      color: var(--success); font-size: .78rem; margin-top: .3rem;
+      display: flex; align-items: center; gap: .3rem;
+    }
+
+    /* ── BUTTONS ────────────────────────────────── */
+    .btn {
+      padding: .65rem 1.4rem; border-radius: var(--radius-sm);
+      font-family: inherit; font-size: .875rem; font-weight: 500;
+      cursor: pointer; border: none; transition: all .15s;
+    }
+    .btn-primary {
+      background: var(--primary); color: #fff;
+    }
+    .btn-primary:hover { background: #5254cc; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(99,102,241,.4); }
+    .btn-secondary {
+      background: var(--surface); color: var(--text); border: 1.5px solid var(--border2);
+    }
+    .btn-secondary:hover { border-color: var(--primary); color: var(--primary2); }
+    .btn-sm { padding: .4rem .9rem; font-size: .8rem; }
+    .btn-group { display: flex; gap: .5rem; flex-wrap: wrap; }
+
+    /* ── CODE BLOCK ─────────────────────────────── */
+    .code-block {
+      background: var(--code-bg); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 1.1rem 1.25rem;
+      font-family: 'JetBrains Mono', monospace; font-size: .8rem;
+      line-height: 1.8; overflow-x: auto; white-space: pre; color: #a9b1d6;
+    }
+    .code-block .kw  { color: #7aa2f7; }
+    .code-block .fn  { color: #7dcfff; }
+    .code-block .str { color: #9ece6a; }
+    .code-block .num { color: #ff9e64; }
+    .code-block .cmt { color: #565f89; font-style: italic; }
+
+    /* ── RESULT BOX ─────────────────────────────── */
+    .result-box {
+      border-radius: var(--radius-sm); padding: 1rem 1.1rem; margin-top: 1rem;
+      font-family: 'JetBrains Mono', monospace; font-size: .8rem; line-height: 1.7;
+      white-space: pre-wrap; word-break: break-all;
+    }
+    .result-ok    { background: rgba(34,197,94,.08);  border: 1px solid rgba(34,197,94,.25);  color: #86efac; }
+    .result-fail  { background: rgba(244,63,94,.08);  border: 1px solid rgba(244,63,94,.25);  color: #fda4af; }
+    .result-empty { background: var(--surface); border: 1px solid var(--border); color: var(--muted); }
+
+    /* ── BADGE ──────────────────────────────────── */
+    .pill {
+      display: inline-flex; align-items: center; gap: .3rem;
+      font-size: .75rem; font-weight: 500; padding: .25rem .65rem;
+      border-radius: 99px;
+    }
+    .pill-ok   { background: rgba(34,197,94,.12);  color: #86efac; }
+    .pill-fail { background: rgba(244,63,94,.12);  color: #fda4af; }
+    .pill-info { background: rgba(99,102,241,.12); color: #a5b4fc; }
+
+    /* ── LOCALE BUTTONS ─────────────────────────── */
+    .locale-btns { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+    .locale-btn {
+      padding: .35rem .85rem; border-radius: var(--radius-sm);
+      font-size: .8rem; font-weight: 500; cursor: pointer;
+      background: var(--surface); border: 1.5px solid var(--border2); color: var(--muted);
+      transition: all .15s;
+    }
+    .locale-btn.active { background: rgba(99,102,241,.15); border-color: var(--primary); color: var(--primary2); }
+
+    /* ── VALIDATOR GRID ─────────────────────────── */
+    .validator-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: .6rem;
+      margin-bottom: 1.25rem;
+    }
+    .vcard {
+      background: var(--surface); border: 1.5px solid var(--border2); border-radius: var(--radius-sm);
+      padding: .6rem .85rem; cursor: pointer; text-align: center; transition: all .15s;
+    }
+    .vcard:hover, .vcard.active { border-color: var(--primary); background: rgba(99,102,241,.08); }
+    .vcard .vname { font-weight: 600; font-size: .875rem; color: var(--primary2); }
+    .vcard .vdesc { font-size: .7rem; color: var(--muted); margin-top: .1rem; }
+
+    /* ── RULE CHIPS ─────────────────────────────── */
+    .rule-chips { display: flex; gap: .45rem; flex-wrap: wrap; margin-bottom: 1rem; }
+    .chip {
+      padding: .3rem .75rem; border-radius: 99px; font-size: .775rem;
+      font-weight: 500; cursor: pointer; border: 1.5px solid var(--border2);
+      background: var(--surface); color: var(--muted); transition: all .15s;
+    }
+    .chip.on { background: rgba(99,102,241,.15); border-color: var(--primary); color: var(--primary2); }
+
+    /* ── ASYNC DEMO ─────────────────────────────── */
+    .async-status {
+      display: flex; align-items: center; gap: .5rem;
+      font-size: .8rem; font-weight: 500; margin-top: .4rem; min-height: 1.4em;
+    }
+    .spinner {
+      width: 14px; height: 14px; border-radius: 50%;
+      border: 2px solid var(--border2); border-top-color: var(--primary2);
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── SCHEMA COMPOSER ────────────────────────── */
+    .schema-row {
+      display: flex; gap: .5rem; align-items: center; margin-bottom: .6rem;
+    }
+    .schema-row select, .schema-row input { flex: 1; }
+    .schema-row .del-btn {
+      background: none; border: 1px solid var(--border2); border-radius: 6px;
+      color: var(--muted); cursor: pointer; padding: .4rem .6rem; font-size: .85rem;
+      transition: all .15s; flex-shrink: 0;
+    }
+    .schema-row .del-btn:hover { border-color: var(--error); color: var(--error); }
+
+    /* ── SECTION HEADINGS ───────────────────────── */
+    h2 { font-size: 1.35rem; font-weight: 700; margin-bottom: .4rem; }
+    h3 { font-size: 1rem; font-weight: 600; margin-bottom: .75rem; }
+    .section-desc { color: var(--muted); font-size: .9rem; margin-bottom: 1.75rem; }
+
+    /* ── DIVIDER ────────────────────────────────── */
+    .divider { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+
+    /* ── SCROLLBAR ──────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    ⚡ Valify <span class="badge">v0.1.0</span>
+  </div>
+  <div class="nav-links">
+    <a href="https://github.com/Adityag025/valify-blueprint" target="_blank">GitHub →</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <h1>JavaScript Validation,<br/>Done Right.</h1>
+  <p>Lightweight, tree-shakable, framework-agnostic. Build schemas with a fluent API and get full TypeScript inference.</p>
+  <div class="hero-stats">
+    <div class="stat"><div class="stat-num">~5 KB</div><div class="stat-label">gzipped</div></div>
+    <div class="stat"><div class="stat-num">115</div><div class="stat-label">tests</div></div>
+    <div class="stat"><div class="stat-num">6</div><div class="stat-label">validators</div></div>
+    <div class="stat"><div class="stat-num">5</div><div class="stat-label">locales</div></div>
+    <div class="stat"><div class="stat-num">0</div><div class="stat-label">dependencies</div></div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs-wrap">
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="form">📋 Form Demo</button>
+    <button class="tab-btn" data-tab="playground">🧪 Playground</button>
+    <button class="tab-btn" data-tab="schema">🏗️ Schema Composer</button>
+    <button class="tab-btn" data-tab="async">⚡ Async</button>
+    <button class="tab-btn" data-tab="i18n">🌐 i18n</button>
+    <button class="tab-btn" data-tab="errors">🔍 Error Inspector</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- ── FORM DEMO ────────────────────────────────────── -->
+  <div class="panel active" id="panel-form">
+    <h2>Live Form Demo</h2>
+    <p class="section-desc">A real registration form — validation fires on every keystroke. All errors collected, no page reload.</p>
+
+    <div class="split">
+      <!-- Left: the form -->
+      <div class="card">
+        <div class="card-title">Registration Form</div>
+
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="f-name" placeholder="Alice Johnson" autocomplete="off" />
+          <div class="field-error" id="e-name"></div>
+        </div>
+
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" id="f-username" placeholder="alice123" autocomplete="off" />
+          <div class="field-error" id="e-username"></div>
+        </div>
+
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="f-email" placeholder="alice@example.com" autocomplete="off" />
+          <div class="field-error" id="e-email"></div>
+        </div>
+
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="f-password" placeholder="Min 8 chars, uppercase + digit" autocomplete="off" />
+          <div class="field-error" id="e-password"></div>
+        </div>
+
+        <div class="form-group">
+          <label>Age</label>
+          <input type="number" id="f-age" placeholder="18–120" autocomplete="off" />
+          <div class="field-error" id="e-age"></div>
+        </div>
+
+        <div class="form-group">
+          <label>Website (optional)</label>
+          <input type="text" id="f-website" placeholder="https://yoursite.com" autocomplete="off" />
+          <div class="field-error" id="e-website"></div>
+        </div>
+
+        <div class="form-group">
+          <label>Role</label>
+          <select id="f-role">
+            <option value="">Select a role</option>
+            <option value="admin">Admin</option>
+            <option value="user">User</option>
+            <option value="guest">Guest</option>
+          </select>
+          <div class="field-error" id="e-role"></div>
+        </div>
+
+        <div style="display:flex;gap:.75rem;margin-top:.5rem">
+          <button class="btn btn-primary" id="submit-btn">Submit Form</button>
+          <button class="btn btn-secondary" id="clear-btn">Clear</button>
+        </div>
+
+        <div id="form-result" style="margin-top:1rem"></div>
+      </div>
+
+      <!-- Right: schema code -->
+      <div>
+        <div class="card" style="margin-bottom:1rem">
+          <div class="card-title">Schema Code</div>
+          <div class="code-block"><span class="kw">import</span> { <span class="fn">object</span>, <span class="fn">string</span>, <span class="fn">number</span> } <span class="kw">from</span> <span class="str">'valify'</span>
+
+<span class="kw">const</span> RegistrationSchema = <span class="fn">object</span>({
+  name:     <span class="fn">string</span>().<span class="fn">required</span>().<span class="fn">min</span>(<span class="num">2</span>).<span class="fn">max</span>(<span class="num">60</span>),
+  username: <span class="fn">string</span>().<span class="fn">required</span>().<span class="fn">min</span>(<span class="num">3</span>).<span class="fn">alphaNumeric</span>(),
+  email:    <span class="fn">string</span>().<span class="fn">required</span>().<span class="fn">email</span>(),
+  password: <span class="fn">string</span>().<span class="fn">required</span>().<span class="fn">min</span>(<span class="num">8</span>).<span class="fn">custom</span>(isStrong),
+  age:      <span class="fn">number</span>().<span class="fn">required</span>().<span class="fn">integer</span>().<span class="fn">min</span>(<span class="num">18</span>).<span class="fn">max</span>(<span class="num">120</span>),
+  website:  <span class="fn">string</span>().<span class="fn">url</span>(),           <span class="cmt">// optional</span>
+  role:     <span class="fn">string</span>().<span class="fn">required</span>()
+               .<span class="fn">oneOf</span>([<span class="str">'admin'</span>,<span class="str">'user'</span>,<span class="str">'guest'</span>]),
+})
+
+<span class="kw">const</span> result = RegistrationSchema.<span class="fn">validate</span>(formData, {
+  abortEarly: <span class="kw">false</span>   <span class="cmt">// collect ALL errors</span>
+})</div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Validation Result</div>
+          <div id="form-live-result" class="result-box result-empty">Type in the form to see results...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PLAYGROUND ──────────────────────────────────── -->
+  <div class="panel" id="panel-playground">
+    <h2>Validator Playground</h2>
+    <p class="section-desc">Pick a validator, toggle rules, type a value — see the result instantly.</p>
+
+    <div class="split">
+      <div>
+        <div class="card" style="margin-bottom:1rem">
+          <div class="card-title">Choose Validator</div>
+          <div class="validator-grid" id="vtype-grid">
+            <div class="vcard active" data-type="string">
+              <div class="vname">string()</div>
+              <div class="vdesc">Text values</div>
+            </div>
+            <div class="vcard" data-type="number">
+              <div class="vname">number()</div>
+              <div class="vdesc">Numeric values</div>
+            </div>
+            <div class="vcard" data-type="boolean">
+              <div class="vname">boolean()</div>
+              <div class="vdesc">True / false</div>
+            </div>
+            <div class="vcard" data-type="date">
+              <div class="vname">date()</div>
+              <div class="vdesc">Date values</div>
+            </div>
+            <div class="vcard" data-type="array">
+              <div class="vname">array()</div>
+              <div class="vdesc">Lists</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Active Rules</div>
+          <div class="rule-chips" id="rule-chips"></div>
+          <div class="form-group" style="margin-bottom:.5rem">
+            <label id="pg-input-label">Value to validate</label>
+            <input type="text" id="pg-input" placeholder="Type a value..." autocomplete="off" />
+          </div>
+          <button class="btn btn-primary btn-sm" id="pg-run">Validate →</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="card" style="margin-bottom:1rem">
+          <div class="card-title">Generated Code</div>
+          <div class="code-block" id="pg-code">string()</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Result</div>
+          <div id="pg-result" class="result-box result-empty">Configure rules and click Validate →</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SCHEMA COMPOSER ─────────────────────────────── -->
+  <div class="panel" id="panel-schema">
+    <h2>Schema Composer</h2>
+    <p class="section-desc">Add fields to build an object schema, then paste in JSON to validate it.</p>
+
+    <div class="split">
+      <div>
+        <div class="card" style="margin-bottom:1rem">
+          <div class="card-title">Fields</div>
+          <div id="schema-fields"></div>
+          <button class="btn btn-secondary btn-sm" id="add-field-btn" style="margin-top:.5rem">+ Add Field</button>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Input JSON</div>
+          <textarea id="schema-json" rows="6" placeholder='{"name":"Alice","email":"alice@example.com"}'
+            style="font-family:JetBrains Mono,monospace;font-size:.8rem;resize:vertical"></textarea>
+          <button class="btn btn-primary" style="margin-top:.75rem" id="schema-validate-btn">Validate JSON →</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="card" style="margin-bottom:1rem">
+          <div class="card-title">Generated Schema</div>
+          <div class="code-block" id="schema-code">object({})</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Result</div>
+          <div id="schema-result" class="result-box result-empty">Add fields and validate JSON...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ASYNC ───────────────────────────────────────── -->
+  <div class="panel" id="panel-async">
+    <h2>Async Validation</h2>
+    <p class="section-desc">Validate against async sources — APIs, databases, uniqueness checks. Built-in AbortController support.</p>
+
+    <div class="split">
+      <div>
+        <div class="card" style="margin-bottom:1rem">
+          <div class="card-title">Email Uniqueness Check</div>
+          <p style="font-size:.825rem;color:var(--muted);margin-bottom:1rem">
+            Simulates a 700ms API call. Try <strong style="color:var(--text)">taken@example.com</strong> to see a failure.
+          </p>
+          <div class="form-group" style="margin-bottom:.5rem">
+            <label>Email</label>
+            <input type="email" id="async-email" placeholder="user@example.com" autocomplete="off" />
+            <div class="async-status" id="async-email-status"></div>
+          </div>
+          <button class="btn btn-primary" id="async-email-btn">Check Availability →</button>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Username Availability</div>
+          <p style="font-size:.825rem;color:var(--muted);margin-bottom:1rem">
+            Try <strong style="color:var(--text)">admin</strong>, <strong style="color:var(--text)">root</strong>, or <strong style="color:var(--text)">system</strong> — they're reserved.
+          </p>
+          <div class="form-group" style="margin-bottom:.5rem">
+            <label>Username</label>
+            <input type="text" id="async-user" placeholder="cooldev" autocomplete="off" />
+            <div class="async-status" id="async-user-status"></div>
+          </div>
+          <button class="btn btn-primary" id="async-user-btn">Check Username →</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="card" style="margin-bottom:1rem">
+          <div class="card-title">Code</div>
+          <div class="code-block"><span class="kw">const</span> emailValidator = <span class="fn">string</span>()
+  .<span class="fn">required</span>()
+  .<span class="fn">email</span>()
+  .<span class="fn">customAsync</span>(<span class="kw">async</span> (value) => {
+    <span class="kw">const</span> taken = <span class="kw">await</span> <span class="fn">checkEmailAPI</span>(value)
+    <span class="kw">return</span> taken
+      ? <span class="str">'Email is already registered'</span>
+      : <span class="kw">true</span>
+  })
+
+<span class="kw">const</span> controller = <span class="kw">new</span> <span class="fn">AbortController</span>()
+
+<span class="kw">const</span> result = <span class="kw">await</span> emailValidator
+  .<span class="fn">validateAsync</span>(email, {
+    signal: controller.signal
+  })
+
+<span class="cmt">// Cancel any in-flight check:</span>
+controller.<span class="fn">abort</span>()</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Result</div>
+          <div id="async-result" class="result-box result-empty">Run a check to see the result...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── I18N ────────────────────────────────────────── -->
+  <div class="panel" id="panel-i18n">
+    <h2>Internationalization</h2>
+    <p class="section-desc">Switch locales at runtime — error messages update immediately. No rebuild required.</p>
+
+    <div class="split">
+      <div>
+        <div class="card">
+          <div class="card-title">Language</div>
+          <div class="locale-btns" id="locale-btns">
+            <button class="locale-btn active" data-locale="en">🇬🇧 English</button>
+            <button class="locale-btn" data-locale="hi">🇮🇳 Hindi</button>
+            <button class="locale-btn" data-locale="es">🇪🇸 Spanish</button>
+            <button class="locale-btn" data-locale="fr">🇫🇷 French</button>
+            <button class="locale-btn" data-locale="de">🇩🇪 German</button>
+          </div>
+
+          <div class="form-group">
+            <label>Name (leave empty to trigger required)</label>
+            <input type="text" id="i18n-name" placeholder="Try leaving empty" autocomplete="off" />
+          </div>
+          <div class="form-group">
+            <label>Email (type something invalid)</label>
+            <input type="email" id="i18n-email" placeholder="not-an-email" autocomplete="off" />
+          </div>
+          <div class="form-group">
+            <label>Age (type a number below 18)</label>
+            <input type="number" id="i18n-age" placeholder="10" autocomplete="off" />
+          </div>
+
+          <button class="btn btn-primary" id="i18n-btn">Validate in Current Locale →</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="card" style="margin-bottom:1rem">
+          <div class="card-title">Code</div>
+          <div class="code-block"><span class="kw">import</span> {
+  <span class="fn">setLocale</span>,
+  <span class="fn">registerLocale</span>
+} <span class="kw">from</span> <span class="str">'valify'</span>
+<span class="kw">import</span> hiLocale <span class="kw">from</span> <span class="str">'valify/src/locales/hi.js'</span>
+
+<span class="cmt">// Register once at startup</span>
+<span class="fn">registerLocale</span>(<span class="str">'hi'</span>, hiLocale)
+
+<span class="cmt">// Switch any time — even per request</span>
+<span class="fn">setLocale</span>(<span class="str">'hi'</span>)
+
+<span class="cmt">// Or override per validation call</span>
+schema.<span class="fn">validate</span>(data, { locale: <span class="str">'es'</span> })</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Result — <span id="locale-label">English</span></div>
+          <div id="i18n-result" class="result-box result-empty">Select a language and validate →</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ERROR INSPECTOR ─────────────────────────────── -->
+  <div class="panel" id="panel-errors">
+    <h2>Error Inspector</h2>
+    <p class="section-desc">Every validation failure returns a structured object — never a thrown exception.</p>
+
+    <div class="split">
+      <div>
+        <div class="card">
+          <div class="card-title">Trigger Different Error Types</div>
+          <div class="btn-group" style="margin-bottom:1.25rem" id="error-triggers">
+            <button class="btn btn-secondary btn-sm" data-error="required">ERR_REQUIRED</button>
+            <button class="btn btn-secondary btn-sm" data-error="type">ERR_TYPE</button>
+            <button class="btn btn-secondary btn-sm" data-error="email">ERR_EMAIL</button>
+            <button class="btn btn-secondary btn-sm" data-error="min">ERR_MIN</button>
+            <button class="btn btn-secondary btn-sm" data-error="max">ERR_MAX</button>
+            <button class="btn btn-secondary btn-sm" data-error="integer">ERR_INTEGER</button>
+            <button class="btn btn-secondary btn-sm" data-error="minItems">ERR_MIN_ITEMS</button>
+            <button class="btn btn-secondary btn-sm" data-error="unique">ERR_UNIQUE</button>
+            <button class="btn btn-secondary btn-sm" data-error="custom">ERR_CUSTOM</button>
+            <button class="btn btn-secondary btn-sm" data-error="multi">Multiple errors</button>
+          </div>
+
+          <div class="card-title" style="margin-top:.5rem">Error Object Structure</div>
+          <div class="code-block"><span class="cmt">// Every ValidationError has:</span>
+{
+  <span class="str">field</span>:   <span class="str">"email"</span>,       <span class="cmt">// field name</span>
+  <span class="str">code</span>:    <span class="str">"ERR_EMAIL"</span>,  <span class="cmt">// machine-readable</span>
+  <span class="str">message</span>: <span class="str">"..."</span>,         <span class="cmt">// locale string</span>
+  <span class="str">value</span>:   <span class="str">"bad@"</span>,        <span class="cmt">// the invalid value</span>
+  <span class="str">rule</span>:    <span class="str">"email"</span>,       <span class="cmt">// rule that failed</span>
+  <span class="str">path</span>:    [<span class="str">"user"</span>, <span class="str">"email"</span>] <span class="cmt">// full path</span>
+}</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card" style="margin-bottom:1rem">
+          <div class="card-title">Result Object</div>
+          <div id="error-result" class="result-box result-empty">Click an error trigger above →</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Errors Serialized (.toJSON())</div>
+          <div id="error-json" class="result-box result-empty">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<script type="module" src="./main.js"></script>
+</body>
+</html>

@@ -24,6 +24,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:bench": "vitest bench",
+    "demo": "vite demo",
     "prepublishOnly": "npm test && npm run build"
   },
   "keywords": [
