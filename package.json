@@ -1,0 +1,45 @@
+{
+  "name": "valify",
+  "version": "0.1.0",
+  "description": "Fast, lightweight, framework-agnostic JavaScript validation library",
+  "type": "module",
+  "main": "./dist/index.cjs.js",
+  "module": "./dist/index.esm.js",
+  "types": "./types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./types/index.d.ts",
+      "import": "./dist/index.esm.js",
+      "require": "./dist/index.cjs.js"
+    }
+  },
+  "files": [
+    "dist",
+    "types",
+    "src"
+  ],
+  "scripts": {
+    "build": "rollup -c",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:bench": "vitest bench",
+    "prepublishOnly": "npm test && npm run build"
+  },
+  "keywords": [
+    "validation",
+    "schema",
+    "validator",
+    "form-validation",
+    "typescript"
+  ],
+  "author": "",
+  "license": "MIT",
+  "sideEffects": false,
+  "devDependencies": {
+    "@rollup/plugin-node-resolve": "^15.3.0",
+    "@vitest/coverage-v8": "^3.2.0",
+    "rollup": "^4.30.0",
+    "vitest": "^3.2.0"
+  }
+}
