@@ -2,6 +2,7 @@ import { BaseValidator } from '../core/BaseValidator.js'
 import { ErrorCodes } from '../errors/ErrorCodes.js'
 import { PATTERNS, validateUserRegex } from '../utils/safeRegex.js'
 import { isString } from '../utils/typeChecks.js'
+import { isRef } from '../schema/ref.js'
 
 export class StringValidator extends BaseValidator {
   constructor() {
@@ -177,6 +178,32 @@ export class StringValidator extends BaseValidator {
     const clone = this._clone()
     clone._transforms = [...clone._transforms, (v) => (isString(v) ? v.trim() : v)]
     return clone
+  }
+
+  coerce() {
+    const clone = this._clone()
+    clone._transforms = [
+      (v) => (v !== null && v !== undefined && !isString(v) ? String(v) : v),
+      ...clone._transforms,
+    ]
+    return clone
+  }
+
+  equals(refOrValue, message = null) {
+    return this._addRule({
+      name: 'equals',
+      code: ErrorCodes.ERR_CUSTOM,
+      params: {},
+      message,
+      validate: (value, _params, ctx) => {
+        const target = isRef(refOrValue) ? refOrValue.resolve(ctx) : refOrValue
+        if (value === target) return true
+        if (message) return false
+        return isRef(refOrValue)
+          ? `Must match ${refOrValue._path.join('.')}`
+          : `Must equal "${target}"`
+      },
+    })
   }
 }
 

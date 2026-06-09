@@ -130,6 +130,15 @@ export class NumberValidator extends BaseValidator {
       validate: (v) => Number.isSafeInteger(v),
     })
   }
+
+  coerce() {
+    const clone = this._clone()
+    clone._transforms = [
+      (v) => (typeof v === 'string' && v.trim() !== '' ? Number(v) : v),
+      ...clone._transforms,
+    ]
+    return clone
+  }
 }
 
 export const number = () => new NumberValidator()

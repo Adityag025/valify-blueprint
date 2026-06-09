@@ -1,6 +1,11 @@
 import resolve from '@rollup/plugin-node-resolve'
+import terser from '@rollup/plugin-terser'
 
 const input = 'src/index.js'
+const terserOptions = {
+  compress: { passes: 2, drop_console: false },
+  format: { comments: false },
+}
 
 export default [
   {
@@ -10,7 +15,7 @@ export default [
       format: 'es',
       sourcemap: true,
     },
-    plugins: [resolve()],
+    plugins: [resolve(), terser(terserOptions)],
   },
   {
     input,
@@ -20,6 +25,6 @@ export default [
       sourcemap: true,
       exports: 'named',
     },
-    plugins: [resolve()],
+    plugins: [resolve(), terser(terserOptions)],
   },
 ]

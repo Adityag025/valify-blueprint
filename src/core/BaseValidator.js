@@ -18,16 +18,36 @@ export class BaseValidator {
     this._defaultValue = undefined
     this._hasDefault = false
     this._transforms = []
+    this._conditionals = []
   }
 
   _clone() {
     const clone = Object.create(Object.getPrototypeOf(this))
-    // Copy all own enumerable properties, then deep-copy mutable arrays
     Object.assign(clone, this)
     clone._rules = [...this._rules]
     clone._asyncRules = [...this._asyncRules]
     clone._transforms = [...this._transforms]
+    clone._conditionals = [...this._conditionals]
     return clone
+  }
+
+  when(field, { is, then, otherwise } = {}) {
+    const clone = this._clone()
+    clone._conditionals = [...clone._conditionals, { field, is, then, otherwise }]
+    return clone
+  }
+
+  _resolveConditionals(options) {
+    let resolved = this._clone()
+    resolved._conditionals = []
+    for (const cond of this._conditionals) {
+      const siblingValue = options?.parent?.[cond.field]
+      const matches =
+        typeof cond.is === 'function' ? cond.is(siblingValue) : siblingValue === cond.is
+      const branchFn = matches ? cond.then : cond.otherwise
+      if (branchFn) resolved = branchFn(resolved)
+    }
+    return resolved
   }
 
   _addRule(rule) {
@@ -103,6 +123,9 @@ export class BaseValidator {
   }
 
   validate(value, options = {}, field = '', path = []) {
+    if (this._conditionals.length) {
+      return this._resolveConditionals(options).validate(value, options, field, path)
+    }
     const ctx = this._buildCtx(options, field, path)
     const isEmpty = value === null || value === undefined || value === ''
 
@@ -161,6 +184,9 @@ export class BaseValidator {
   }
 
   async validateAsync(value, options = {}, field = '', path = []) {
+    if (this._conditionals.length) {
+      return this._resolveConditionals(options).validateAsync(value, options, field, path)
+    }
     const syncResult = this.validate(value, options, field, path)
 
     if (this._asyncRules.length === 0) return syncResult

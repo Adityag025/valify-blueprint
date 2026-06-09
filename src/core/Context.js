@@ -11,6 +11,7 @@ export class ValidationContext {
     this.extra = options.context || {}
     this._depth = options._depth || 0
     this._seen = options._seen || new WeakSet()
+    this.parent = options.parent || null
 
     if (this._depth > MAX_DEPTH) {
       throw new Error(
@@ -37,7 +38,7 @@ export class ValidationContext {
     }
   }
 
-  child(field, path) {
+  child(field, path, parent = null) {
     return new ValidationContext(
       {
         abortEarly: this.abortEarly,
@@ -47,6 +48,7 @@ export class ValidationContext {
         context: this.extra,
         _depth: this._depth + 1,
         _seen: this._seen,
+        parent,
       },
       field,
       path

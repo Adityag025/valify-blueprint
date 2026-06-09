@@ -1,6 +1,7 @@
 import { string }   from '../src/validators/StringValidator.js'
 import { number }   from '../src/validators/NumberValidator.js'
 import { boolean }  from '../src/validators/BooleanValidator.js'
+import { ref }      from '../src/schema/ref.js'
 import { date }     from '../src/validators/DateValidator.js'
 import { array }    from '../src/validators/ArrayValidator.js'
 import { object }   from '../src/validators/ObjectValidator.js'
@@ -562,6 +563,68 @@ $('i18n-btn').addEventListener('click', () => {
 
   const result = i18nSchema.validate(data, { abortEarly: false, locale: currentLocale })
   setResult('i18n-result', result)
+})
+
+// ─── NEW FEATURES ─────────────────────────────────────────────────────────────
+
+const paymentSchema = object({
+  method: string().required(),
+  cardNumber: string().when('method', {
+    is: 'card',
+    then: (s) => s.required('Card number is required').min(16, 'Must be at least 16 digits'),
+  }),
+  bankAccount: string().when('method', {
+    is: 'bank',
+    then: (s) => s.required('Bank account is required'),
+  }),
+})
+
+$('w-run').addEventListener('click', () => {
+  const data = {
+    method: $('w-method').value,
+    cardNumber: $('w-card').value || undefined,
+    bankAccount: $('w-bank').value || undefined,
+  }
+  const result = paymentSchema.validate(data, { abortEarly: false })
+  ;['card', 'bank'].forEach((f) => {
+    const errEl = $(f === 'card' ? 'we-card' : 'we-bank')
+    const field = f === 'card' ? 'cardNumber' : 'bankAccount'
+    const err = result.errors?.find((e) => e.field === field)
+    errEl.textContent = err ? '⚠ ' + err.message : ''
+  })
+  setResult('w-result', result)
+})
+
+const passwordSchema = object({
+  password: string().required().min(8),
+  confirm: string().required().equals(ref('password'), 'Passwords must match'),
+})
+
+$('r-run').addEventListener('click', () => {
+  const data = { password: $('r-password').value, confirm: $('r-confirm').value }
+  const result = passwordSchema.validate(data, { abortEarly: false })
+  const pwErr = result.errors?.find((e) => e.field === 'password')
+  const cfErr = result.errors?.find((e) => e.field === 'confirm')
+  $('re-password').textContent = pwErr ? '⚠ ' + pwErr.message : ''
+  $('re-confirm').textContent  = cfErr ? '⚠ ' + cfErr.message  : ''
+  setResult('r-result', result)
+})
+
+$('c-run').addEventListener('click', () => {
+  const ageResult = number().coerce().required().integer().min(0).validate($('c-age').value)
+  const { cls: ac, text: at } = resultHtml(ageResult)
+  $('c-age-result').className = `result-box ${ac}`
+  $('c-age-result').textContent = at
+
+  const boolResult = boolean().coerce().validate($('c-bool').value)
+  const { cls: bc, text: bt } = resultHtml(boolResult)
+  $('c-bool-result').className = `result-box ${bc}`
+  $('c-bool-result').textContent = bt
+
+  const arrResult = array(string()).coerce().minItems(1).validate($('c-arr').value)
+  const { cls: rc, text: rt } = resultHtml(arrResult)
+  $('c-arr-result').className = `result-box ${rc}`
+  $('c-arr-result').textContent = rt
 })
 
 // ─── ERROR INSPECTOR ──────────────────────────────────────────────────────────

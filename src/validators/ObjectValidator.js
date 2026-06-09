@@ -54,8 +54,8 @@ export class ObjectValidator extends BaseValidator {
     const aggregator = new ErrorAggregator()
     const coerced = {}
 
-    // Pass circular-ref tracking and depth into child validators
-    const childOptions = { ...options, _seen: ctx._seen, _depth: ctx._depth }
+    // Pass circular-ref tracking, depth, and parent object into child validators
+    const childOptions = { ...options, parent: value, _seen: ctx._seen, _depth: ctx._depth }
 
     // Validate shape fields
     const shapeKeys = safeKeys(this._shape)

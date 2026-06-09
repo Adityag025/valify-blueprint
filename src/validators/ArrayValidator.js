@@ -192,6 +192,20 @@ export class ArrayValidator extends BaseValidator {
     clone._transforms = [...clone._transforms, (v) => (isArray(v) ? v.filter(Boolean) : v)]
     return clone
   }
+
+  coerce() {
+    const clone = this._clone()
+    clone._transforms = [
+      (v) => {
+        if (typeof v === 'string') {
+          try { return JSON.parse(v) } catch { return v }
+        }
+        return v
+      },
+      ...clone._transforms,
+    ]
+    return clone
+  }
 }
 
 export const array = (itemSchema = null) => new ArrayValidator(itemSchema)

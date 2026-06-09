@@ -286,8 +286,8 @@
   <h1>JavaScript Validation,<br/>Done Right.</h1>
   <p>Lightweight, tree-shakable, framework-agnostic. Build schemas with a fluent API and get full TypeScript inference.</p>
   <div class="hero-stats">
-    <div class="stat"><div class="stat-num">~5 KB</div><div class="stat-label">gzipped</div></div>
-    <div class="stat"><div class="stat-num">115</div><div class="stat-label">tests</div></div>
+    <div class="stat"><div class="stat-num">~7 KB</div><div class="stat-label">gzipped</div></div>
+    <div class="stat"><div class="stat-num">146</div><div class="stat-label">tests</div></div>
     <div class="stat"><div class="stat-num">6</div><div class="stat-label">validators</div></div>
     <div class="stat"><div class="stat-num">5</div><div class="stat-label">locales</div></div>
     <div class="stat"><div class="stat-num">0</div><div class="stat-label">dependencies</div></div>
@@ -303,6 +303,7 @@
     <button class="tab-btn" data-tab="async">⚡ Async</button>
     <button class="tab-btn" data-tab="i18n">🌐 i18n</button>
     <button class="tab-btn" data-tab="errors">🔍 Error Inspector</button>
+    <button class="tab-btn" data-tab="features">✨ New Features</button>
   </div>
 </div>
 
@@ -664,6 +665,149 @@ schema.<span class="fn">validate</span>(data, { locale: <span class="str">'es'</
           <div class="card-title">Errors Serialized (.toJSON())</div>
           <div id="error-json" class="result-box result-empty">—</div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── NEW FEATURES ──────────────────────────────── -->
+  <div class="panel" id="panel-features">
+    <h2>New in v0.2.0</h2>
+    <p class="section-desc">Conditional validation, cross-field references, and coerce mode — all live below.</p>
+
+    <!-- when() -->
+    <h3 style="margin-bottom:.5rem">when() — Conditional Validation</h3>
+    <p class="section-desc" style="margin-bottom:1.25rem">
+      Make a field required only when another field has a specific value. Perfect for payment flows, role-based forms, etc.
+    </p>
+    <div class="split">
+      <div class="card">
+        <div class="card-title">Payment Method</div>
+        <div class="form-group">
+          <label>Payment Method</label>
+          <select id="w-method">
+            <option value="bank">Bank Transfer</option>
+            <option value="card">Credit Card</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Card Number <span style="color:var(--muted)">(required if Card selected)</span></label>
+          <input type="text" id="w-card" placeholder="16-digit card number" autocomplete="off" />
+          <div class="field-error" id="we-card"></div>
+        </div>
+        <div class="form-group">
+          <label>Bank Account <span style="color:var(--muted)">(required if Bank selected)</span></label>
+          <input type="text" id="w-bank" placeholder="Account number" autocomplete="off" />
+          <div class="field-error" id="we-bank"></div>
+        </div>
+        <button class="btn btn-primary" id="w-run">Validate →</button>
+        <div id="w-result" class="result-box result-empty" style="margin-top:.75rem">Fill in the form and click Validate →</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Schema Code</div>
+        <div class="code-block"><span class="kw">const</span> schema = <span class="fn">object</span>({
+  method: <span class="fn">string</span>().<span class="fn">required</span>(),
+
+  cardNumber: <span class="fn">string</span>()
+    .<span class="fn">when</span>(<span class="str">'method'</span>, {
+      is: <span class="str">'card'</span>,
+      then:  s => s.<span class="fn">required</span>().<span class="fn">min</span>(<span class="num">16</span>),
+    }),
+
+  bankAccount: <span class="fn">string</span>()
+    .<span class="fn">when</span>(<span class="str">'method'</span>, {
+      is: <span class="str">'bank'</span>,
+      then:  s => s.<span class="fn">required</span>(),
+    }),
+})</div>
+      </div>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- ref() -->
+    <h3 style="margin-bottom:.5rem">ref() — Cross-field References</h3>
+    <p class="section-desc" style="margin-bottom:1.25rem">
+      Reference another field's value at validation time. Classic use: confirm password must match password.
+    </p>
+    <div class="split">
+      <div class="card">
+        <div class="card-title">Password Confirmation</div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="r-password" placeholder="Min 8 characters" autocomplete="off" />
+          <div class="field-error" id="re-password"></div>
+        </div>
+        <div class="form-group">
+          <label>Confirm Password</label>
+          <input type="password" id="r-confirm" placeholder="Must match password" autocomplete="off" />
+          <div class="field-error" id="re-confirm"></div>
+        </div>
+        <button class="btn btn-primary" id="r-run">Validate →</button>
+        <div id="r-result" class="result-box result-empty" style="margin-top:.75rem">Fill in and click Validate →</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Schema Code</div>
+        <div class="code-block"><span class="kw">import</span> { <span class="fn">ref</span> } <span class="kw">from</span> <span class="str">'valify'</span>
+
+<span class="kw">const</span> schema = <span class="fn">object</span>({
+  password: <span class="fn">string</span>()
+    .<span class="fn">required</span>().<span class="fn">min</span>(<span class="num">8</span>),
+
+  confirm: <span class="fn">string</span>()
+    .<span class="fn">required</span>()
+    .<span class="fn">equals</span>(
+      <span class="fn">ref</span>(<span class="str">'password'</span>),
+      <span class="str">'Passwords must match'</span>
+    ),
+})</div>
+      </div>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- coerce() -->
+    <h3 style="margin-bottom:.5rem">coerce() — Form String Coercion</h3>
+    <p class="section-desc" style="margin-bottom:1.25rem">
+      HTML forms always return strings. <code style="color:var(--primary2)">coerce()</code> auto-converts
+      <code style="color:var(--primary2)">"42"→42</code>, <code style="color:var(--primary2)">"true"→true</code>, etc.
+    </p>
+    <div class="split">
+      <div class="card">
+        <div class="card-title">Coerce Demo</div>
+        <div class="form-group">
+          <label>Age (string from form input → coerced to number)</label>
+          <input type="text" id="c-age" placeholder='Try "25" or "abc"' autocomplete="off" />
+          <div id="c-age-result" class="result-box result-empty" style="margin-top:.4rem;font-size:.75rem">—</div>
+        </div>
+        <div class="form-group">
+          <label>Active (string → boolean)</label>
+          <input type="text" id="c-bool" placeholder='Try "true", "false", "1", "0"' autocomplete="off" />
+          <div id="c-bool-result" class="result-box result-empty" style="margin-top:.4rem;font-size:.75rem">—</div>
+        </div>
+        <div class="form-group">
+          <label>Tags (JSON string → array)</label>
+          <input type="text" id="c-arr" placeholder='Try [&quot;a&quot;,&quot;b&quot;]' autocomplete="off" />
+          <div id="c-arr-result" class="result-box result-empty" style="margin-top:.4rem;font-size:.75rem">—</div>
+        </div>
+        <button class="btn btn-primary" id="c-run">Run Coercion →</button>
+      </div>
+      <div class="card">
+        <div class="card-title">Schema Code</div>
+        <div class="code-block"><span class="cmt">// number().coerce() — "42" → 42</span>
+<span class="kw">const</span> ageSchema = <span class="fn">number</span>()
+  .<span class="fn">coerce</span>()
+  .<span class="fn">required</span>()
+  .<span class="fn">integer</span>()
+  .<span class="fn">min</span>(<span class="num">0</span>)
+
+<span class="cmt">// boolean().coerce() — "true"/"1" → true</span>
+<span class="kw">const</span> flagSchema = <span class="fn">boolean</span>()
+  .<span class="fn">coerce</span>()
+
+<span class="cmt">// array().coerce() — "[1,2,3]" → [1,2,3]</span>
+<span class="kw">const</span> tagsSchema = <span class="fn">array</span>(<span class="fn">string</span>())
+  .<span class="fn">coerce</span>()
+  .<span class="fn">minItems</span>(<span class="num">1</span>)</div>
       </div>
     </div>
   </div>
